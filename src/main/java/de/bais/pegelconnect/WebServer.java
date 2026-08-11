@@ -23,7 +23,7 @@ public final class WebServer implements AutoCloseable {
 
     public WebServer(int port, ReadingStore store, BooleanSupplier mqttConnected) throws IOException {
         server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
-        server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+        server.setExecutor(Executors.newCachedThreadPool());
 
         server.createContext("/api/state", exchange -> {
             if (!"GET".equals(exchange.getRequestMethod())) {
@@ -42,8 +42,8 @@ public final class WebServer implements AutoCloseable {
     }
 
     private void staticFile(HttpExchange exchange) throws IOException {
-        String path = exchange.getRequestURI().getPath();
-        if (path.equals("/")) path = "/index.html";
+        String requestPath = exchange.getRequestURI().getPath();
+	String path = requestPath.equals("/") ? "/index.html" : requestPath;
         if (path.contains("..")) {
             send(exchange, 400, "text/plain", "Bad request");
             return;

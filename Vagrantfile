@@ -1,8 +1,10 @@
-Vagrant.configure("2") do |config|
+﻿Vagrant.configure("2") do |config|
   config.vm.box = "cloud-image/ubuntu-24.04"
   config.vm.box_version = "20260801.0.0"
   config.vm.hostname = "pegelconnect-pro"
   config.vm.boot_timeout = 600
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.network "forwarded_port",
     guest: 8080,
@@ -25,7 +27,21 @@ Vagrant.configure("2") do |config|
     vb.check_guest_additions = false
   end
 
+  config.vm.provision "file",
+    source: "pom.xml",
+    destination: "/tmp/pegelconnect-pro/pom.xml"
+
+  config.vm.provision "file",
+    source: "src",
+    destination: "/tmp/pegelconnect-pro/src"
+
+  config.vm.provision "file",
+    source: "infrastructure/provision.sh",
+    destination: "/tmp/pegelconnect-pro/provision.sh"
+
   config.vm.provision "shell",
-    path: "infrastructure/provision.sh",
-    privileged: true
+    inline: <<-SHELL
+      chmod +x /tmp/pegelconnect-pro/provision.sh
+      /tmp/pegelconnect-pro/provision.sh
+    SHELL
 end

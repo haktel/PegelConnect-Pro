@@ -13,13 +13,12 @@ cat >/etc/mosquitto/conf.d/pegelconnect-pro.conf <<'EOF'
 listener 1883
 allow_anonymous true
 persistence true
-persistence_location /var/lib/mosquitto/
 EOF
 systemctl enable mosquitto
 systemctl restart mosquitto
 
 echo "[4/7] Anwendung bauen"
-cd /vagrant
+cd /tmp/pegelconnect-pro
 mvn -q -DskipTests clean package
 
 echo "[5/7] Anwendung installieren"
@@ -29,7 +28,7 @@ install -m 0644 target/PegelConnect-Pro.jar /opt/pegelconnect-pro/PegelConnect-P
 cat >/etc/pegelconnect-pro.env <<'EOF'
 MQTT_BROKER_URI=tcp://localhost:1883
 MQTT_CLIENT_ID=pegelconnect-pro
-PEGEL_STATIONS=KOELN,MAINZ,BONN
+PEGEL_STATIONS=KÖLN,MAINZ,BONN
 FETCH_INTERVAL_SECONDS=3600
 HTTP_PORT=8080
 EOF

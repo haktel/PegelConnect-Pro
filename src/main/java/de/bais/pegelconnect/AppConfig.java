@@ -13,7 +13,7 @@ public record AppConfig(
     public static AppConfig fromEnvironment() {
         String broker = env("MQTT_BROKER_URI", "tcp://localhost:1883");
         String clientId = env("MQTT_CLIENT_ID", "pegelconnect-pro");
-        List<String> stations = Arrays.stream(env("PEGEL_STATIONS", "KOELN,MAINZ,BONN").split(","))
+        List<String> stations = Arrays.stream(env("PEGEL_STATIONS", "KÖLN,MAINZ,BONN").split(","))
                 .map(String::trim)
                 .filter(s -> !s.isBlank())
                 .map(String::toUpperCase)

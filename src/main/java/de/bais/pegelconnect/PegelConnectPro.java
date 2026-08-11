@@ -42,7 +42,7 @@ public final class PegelConnectPro {
 
         web.start();
         fetchJob.run();
-        scheduler.scheduleAtFixedRate(
+        scheduler.scheduleWithFixedDelay(
                 fetchJob,
                 config.fetchIntervalSeconds(),
                 config.fetchIntervalSeconds(),
