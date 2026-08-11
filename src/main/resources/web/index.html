@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PegelConnect Pro – Live-Dashboard für Wasserstände">
+  <title>PegelConnect Pro</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Zum Inhalt</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">≈</div>
+      <div>
+        <strong>PegelConnect <span>PRO</span></strong>
+        <small>Live Water Intelligence</small>
+      </div>
+    </div>
+    <div class="system-state">
+      <span id="liveDot" class="dot"></span>
+      <span id="systemText">System wird geprüft…</span>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">PEGELONLINE · MQTT · JAVA 17</p>
+        <h1>Wasserstände.<br><span>Live. Klar. Vernetzt.</span></h1>
+        <p>Moderne Visualisierung der Pegelstände Köln, Mainz und Bonn – mit MQTT-Status, Trend und Verlauf.</p>
+      </div>
+      <div class="hero-metric">
+        <small>Letztes Update</small>
+        <strong id="lastUpdate">–</strong>
+        <span id="mqttState">MQTT: –</span>
+      </div>
+    </section>
+
+    <section class="cards" aria-label="Aktuelle Pegelstände">
+      <article class="station-card" data-station="KOELN">
+        <div class="card-top"><span>KÖLN</span><span class="trend" id="trend-KOELN">•</span></div>
+        <div class="value"><strong id="value-KOELN">–</strong><span>cm</span></div>
+        <div class="water"><div id="water-KOELN" class="water-fill"></div></div>
+        <small id="time-KOELN">Noch keine Messung</small>
+      </article>
+
+      <article class="station-card" data-station="MAINZ">
+        <div class="card-top"><span>MAINZ</span><span class="trend" id="trend-MAINZ">•</span></div>
+        <div class="value"><strong id="value-MAINZ">–</strong><span>cm</span></div>
+        <div class="water"><div id="water-MAINZ" class="water-fill"></div></div>
+        <small id="time-MAINZ">Noch keine Messung</small>
+      </article>
+
+      <article class="station-card" data-station="BONN">
+        <div class="card-top"><span>BONN</span><span class="trend" id="trend-BONN">•</span></div>
+        <div class="value"><strong id="value-BONN">–</strong><span>cm</span></div>
+        <div class="water"><div id="water-BONN" class="water-fill"></div></div>
+        <small id="time-BONN">Noch keine Messung</small>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">VERLAUF</p>
+          <h2>Messhistorie</h2>
+        </div>
+        <div class="legend" aria-label="Diagrammlegende">
+          <span><i class="k"></i>Köln</span><span><i class="m"></i>Mainz</span><span><i class="b"></i>Bonn</span>
+        </div>
+      </div>
+      <canvas id="chart" width="1200" height="360" aria-label="Diagramm der Pegelstände"></canvas>
+    </section>
+
+    <section class="status-grid">
+      <article class="status-box">
+        <small>JAVA BACKEND</small><strong id="backendStatus">ONLINE</strong>
+      </article>
+      <article class="status-box">
+        <small>MQTT BROKER</small><strong id="brokerStatus">PRÜFUNG…</strong>
+      </article>
+      <article class="status-box">
+        <small>DATENQUELLE</small><strong>PEGELONLINE</strong>
+      </article>
+      <article class="status-box">
+        <small>INTERVALL</small><strong>1 STUNDE</strong>
+      </article>
+    </section>
+
+    <p id="errorBox" class="error" hidden></p>
+  </main>
+
+  <footer>
+    <span>© www.pegelonline.wsv.de</span>
+    <span>PegelConnect Pro · BAIS IT Solutions</span>
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
