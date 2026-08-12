@@ -1,0 +1,64 @@
+{
+  "application": {
+    "name": "PegelConnect Pro",
+    "httpPort": 8080,
+    "fetchIntervalSeconds": 60
+  },
+
+  "pegelonline": {
+    "server": "https://www.pegelonline.wsv.de",
+    "apiPath": "/webservices/rest-api/v2",
+    "timeoutSeconds": 30,
+    "historyMaxDays": 30
+  },
+
+  "mqtt": {
+    "server": "tcp://localhost:1883",
+    "clientId": "pegelconnect-pro",
+    "timeoutSeconds": 10
+  },
+
+  "weather": {
+    "enabled": true,
+    "server": "https://api.open-meteo.com/v1/forecast",
+    "timeoutSeconds": 15,
+    "timezone": "Europe/Berlin"
+  },
+
+  "stations": [
+    {
+      "name": "KÖLN",
+      "apiName": "KÖLN",
+      "uuid": "a6ee8177-107b-47dd-bcfd-30960ccc6e9c",
+      "latitude": 50.9375,
+      "longitude": 6.9603
+    },
+    {
+      "name": "BONN",
+      "apiName": "BONN",
+      "uuid": "593647aa-9fea-43ec-a7d6-6476a76ae868",
+      "latitude": 50.7374,
+      "longitude": 7.0982
+    },
+    {
+      "name": "MAINZ",
+      "apiName": "MAINZ",
+      "uuid": "a37a9aa3-45e9-4d90-9df6-109f3a28a5af",
+      "latitude": 49.9929,
+      "longitude": 8.2473
+    }
+  ],
+
+  "logging": {
+    "directory": "/var/log/pegelconnect-pro",
+    "retentionDays": 90
+  },
+
+  "reports": {
+    "historyPeriods": [
+      "24h",
+      "7d",
+      "30d"
+    ]
+  }
+}

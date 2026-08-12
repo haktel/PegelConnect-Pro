@@ -25,259 +25,523 @@ public final class WebServer implements AutoCloseable {
 
     private final HttpServer server;
 
+    private final AppConfig config;
+
+    private final WeatherClient weatherClient;
+
+    private final PegelOnlineClient pegelOnlineClient;
+
+
+    // =========================================================
+    // KONSTRUKTOR
+    // =========================================================
+
     public WebServer(
-            int port,
+            AppConfig config,
             ReadingStore store,
-            BooleanSupplier mqttConnected
+            BooleanSupplier mqttConnected,
+            PegelOnlineClient pegelOnlineClient
     ) throws IOException {
 
-        server = HttpServer.create(
-                new InetSocketAddress("0.0.0.0", port),
-                0
+        this.config =
+                config;
+
+        this.pegelOnlineClient =
+                pegelOnlineClient;
+
+        this.weatherClient =
+                new WeatherClient(
+                        config
+                );
+
+
+        server =
+                HttpServer.create(
+                        new InetSocketAddress(
+                                "0.0.0.0",
+                                config.httpPort()
+                        ),
+                        0
+                );
+
+
+        server.setExecutor(
+                Executors.newCachedThreadPool()
         );
 
-        server.setExecutor(Executors.newCachedThreadPool());
-
-        WeatherClient weatherClient =
-                new WeatherClient();
-
-        PegelOnlineClient pegelOnlineClient =
-                new PegelOnlineClient();
-
 
         // =====================================================
-        // SYSTEMSTATUS / AKTUELLE PEGELDATEN
+        // API STATE
         // =====================================================
 
-        server.createContext("/api/state", exchange -> {
+        server.createContext(
+                "/api/state",
+                exchange -> {
 
-            if (!"GET".equals(exchange.getRequestMethod())) {
+                    if (
+                            !"GET".equals(
+                                    exchange.getRequestMethod()
+                            )
+                    ) {
 
-                send(
-                        exchange,
-                        405,
-                        "application/json",
-                        "{\"error\":\"method_not_allowed\"}"
-                );
-
-                return;
-            }
-
-            send(
-                    exchange,
-                    200,
-                    "application/json; charset=UTF-8",
-                    store.snapshot(
-                            mqttConnected.getAsBoolean()
-                    ).toString()
-            );
-        });
-
-
-        // =====================================================
-        // PEGEL-HISTORIE
-        //
-        // Beispiele:
-        //
-        // /api/history?station=KÖLN&period=24h
-        // /api/history?station=BONN&period=7d
-        // /api/history?station=MAINZ&period=30d
-        // =====================================================
-
-        server.createContext("/api/history", exchange -> {
-
-            if (!"GET".equals(exchange.getRequestMethod())) {
-
-                send(
-                        exchange,
-                        405,
-                        "application/json",
-                        "{\"error\":\"method_not_allowed\"}"
-                );
-
-                return;
-            }
-
-            try {
-
-                Map<String, String> query =
-                        parseQuery(
-                                exchange
-                                        .getRequestURI()
-                                        .getRawQuery()
+                        send(
+                                exchange,
+                                405,
+                                "application/json",
+                                "{\"error\":\"method_not_allowed\"}"
                         );
 
-                String station =
-                        query
-                                .getOrDefault(
-                                        "station",
-                                        "KÖLN"
-                                )
-                                .toUpperCase();
+                        return;
+                    }
 
-                String period =
-                        query
-                                .getOrDefault(
-                                        "period",
-                                        "24h"
-                                )
-                                .toLowerCase();
-
-                if (
-                        !"24h".equals(period)
-                                && !"7d".equals(period)
-                                && !"30d".equals(period)
-                ) {
 
                     send(
                             exchange,
-                            400,
+                            200,
                             "application/json; charset=UTF-8",
-                            "{\"error\":\"invalid_period\"}"
+                            store.snapshot(
+                                    mqttConnected.getAsBoolean()
+                            ).toString()
                     );
-
-                    return;
                 }
-
-                var measurements =
-                        pegelOnlineClient.fetchHistory(
-                                station,
-                                period
-                        );
-
-                JSONArray values =
-                        new JSONArray();
-
-                for (
-                        PegelOnlineClient.RawMeasurement measurement
-                        : measurements
-                ) {
-
-                    JSONObject item =
-                            new JSONObject();
-
-                    item.put(
-                            "timestamp",
-                            measurement.timestamp()
-                    );
-
-                    item.put(
-                            "value",
-                            measurement.value()
-                    );
-
-                    values.put(item);
-                }
-
-                JSONObject response =
-                        new JSONObject();
-
-                response.put(
-                        "station",
-                        station
-                );
-
-                response.put(
-                        "period",
-                        period
-                );
-
-                response.put(
-                        "count",
-                        values.length()
-                );
-
-                response.put(
-                        "measurements",
-                        values
-                );
-
-                send(
-                        exchange,
-                        200,
-                        "application/json; charset=UTF-8",
-                        response.toString()
-                );
-
-            } catch (Exception e) {
-
-                send(
-                        exchange,
-                        500,
-                        "application/json; charset=UTF-8",
-                        errorJson(
-                                "history_failed",
-                                e
-                        )
-                );
-            }
-        });
+        );
 
 
         // =====================================================
-        // WETTER
-        //
-        // Beispiel:
-        //
-        // /api/weather?station=KÖLN
+        // API HISTORY
         // =====================================================
 
-        server.createContext("/api/weather", exchange -> {
+        server.createContext(
+                "/api/history",
+                exchange -> {
 
-            if (!"GET".equals(exchange.getRequestMethod())) {
+                    if (
+                            !"GET".equals(
+                                    exchange.getRequestMethod()
+                            )
+                    ) {
 
-                send(
-                        exchange,
-                        405,
-                        "application/json",
-                        "{\"error\":\"method_not_allowed\"}"
-                );
-
-                return;
-            }
-
-            try {
-
-                Map<String, String> query =
-                        parseQuery(
-                                exchange
-                                        .getRequestURI()
-                                        .getRawQuery()
+                        send(
+                                exchange,
+                                405,
+                                "application/json",
+                                "{\"error\":\"method_not_allowed\"}"
                         );
 
-                String station =
-                        query
-                                .getOrDefault(
-                                        "station",
-                                        "KÖLN"
-                                )
-                                .toUpperCase();
+                        return;
+                    }
 
-                JSONObject weather =
-                        weatherClient.fetch(
+
+                    try {
+
+                        Map<String, String> query =
+                                parseQuery(
+                                        exchange
+                                                .getRequestURI()
+                                                .getRawQuery()
+                                );
+
+
+                        String station =
+                                query
+                                        .getOrDefault(
+                                                "station",
+                                                defaultStation()
+                                        )
+                                        .toUpperCase();
+
+
+                        String period =
+                                query
+                                        .getOrDefault(
+                                                "period",
+                                                "24h"
+                                        )
+                                        .toLowerCase();
+
+
+                        if (
+                                !"24h".equals(period)
+                                        && !"7d".equals(period)
+                                        && !"30d".equals(period)
+                        ) {
+
+                            send(
+                                    exchange,
+                                    400,
+                                    "application/json; charset=UTF-8",
+                                    "{\"error\":\"invalid_period\"}"
+                            );
+
+                            return;
+                        }
+
+
+                        validateStation(
                                 station
                         );
 
-                send(
-                        exchange,
-                        200,
-                        "application/json; charset=UTF-8",
-                        weather.toString()
-                );
 
-            } catch (Exception e) {
+                        var measurements =
+                                pegelOnlineClient.fetchHistory(
+                                        station,
+                                        period
+                                );
 
-                send(
-                        exchange,
-                        500,
-                        "application/json; charset=UTF-8",
-                        errorJson(
-                                "weather_failed",
-                                e
-                        )
-                );
-            }
-        });
+
+                        JSONArray values =
+                                new JSONArray();
+
+
+                        for (
+                                PegelOnlineClient.RawMeasurement measurement
+                                : measurements
+                        ) {
+
+                            JSONObject item =
+                                    new JSONObject();
+
+
+                            item.put(
+                                    "timestamp",
+                                    measurement.timestamp()
+                            );
+
+
+                            item.put(
+                                    "value",
+                                    measurement.value()
+                            );
+
+
+                            values.put(
+                                    item
+                            );
+                        }
+
+
+                        JSONObject response =
+                                new JSONObject();
+
+
+                        response.put(
+                                "station",
+                                station
+                        );
+
+
+                        response.put(
+                                "period",
+                                period
+                        );
+
+
+                        response.put(
+                                "count",
+                                values.length()
+                        );
+
+
+                        response.put(
+                                "measurements",
+                                values
+                        );
+
+
+                        send(
+                                exchange,
+                                200,
+                                "application/json; charset=UTF-8",
+                                response.toString()
+                        );
+
+
+                    } catch (
+                            IllegalArgumentException ex
+                    ) {
+
+                        send(
+                                exchange,
+                                400,
+                                "application/json; charset=UTF-8",
+                                errorJson(
+                                        "invalid_request",
+                                        ex
+                                )
+                        );
+
+
+                    } catch (Exception ex) {
+
+                        send(
+                                exchange,
+                                500,
+                                "application/json; charset=UTF-8",
+                                errorJson(
+                                        "history_failed",
+                                        ex
+                                )
+                        );
+                    }
+                }
+        );
+
+
+        // =====================================================
+        // API WEATHER
+        // =====================================================
+
+        server.createContext(
+                "/api/weather",
+                exchange -> {
+
+                    if (
+                            !"GET".equals(
+                                    exchange.getRequestMethod()
+                            )
+                    ) {
+
+                        send(
+                                exchange,
+                                405,
+                                "application/json",
+                                "{\"error\":\"method_not_allowed\"}"
+                        );
+
+                        return;
+                    }
+
+
+                    try {
+
+                        if (
+                                !config.weatherEnabled()
+                        ) {
+
+                            send(
+                                    exchange,
+                                    503,
+                                    "application/json; charset=UTF-8",
+                                    "{\"error\":\"weather_disabled\"}"
+                            );
+
+                            return;
+                        }
+
+
+                        Map<String, String> query =
+                                parseQuery(
+                                        exchange
+                                                .getRequestURI()
+                                                .getRawQuery()
+                                );
+
+
+                        String station =
+                                query
+                                        .getOrDefault(
+                                                "station",
+                                                defaultStation()
+                                        )
+                                        .toUpperCase();
+
+
+                        validateStation(
+                                station
+                        );
+
+
+                        JSONObject weather =
+                                weatherClient.fetch(
+                                        station
+                                );
+
+
+                        send(
+                                exchange,
+                                200,
+                                "application/json; charset=UTF-8",
+                                weather.toString()
+                        );
+
+
+                    } catch (
+                            IllegalArgumentException ex
+                    ) {
+
+                        send(
+                                exchange,
+                                400,
+                                "application/json; charset=UTF-8",
+                                errorJson(
+                                        "invalid_request",
+                                        ex
+                                )
+                        );
+
+
+                    } catch (Exception ex) {
+
+                        send(
+                                exchange,
+                                500,
+                                "application/json; charset=UTF-8",
+                                errorJson(
+                                        "weather_failed",
+                                        ex
+                                )
+                        );
+                    }
+                }
+        );
+
+
+        // =====================================================
+        // API CONFIG
+        // =====================================================
+
+        server.createContext(
+                "/api/config",
+                exchange -> {
+
+                    if (
+                            !"GET".equals(
+                                    exchange.getRequestMethod()
+                            )
+                    ) {
+
+                        send(
+                                exchange,
+                                405,
+                                "application/json",
+                                "{\"error\":\"method_not_allowed\"}"
+                        );
+
+                        return;
+                    }
+
+
+                    JSONObject response =
+                            new JSONObject();
+
+
+                    response.put(
+                            "application",
+                            config.applicationName()
+                    );
+
+
+                    response.put(
+                            "httpPort",
+                            config.httpPort()
+                    );
+
+
+                    response.put(
+                            "fetchIntervalSeconds",
+                            config.fetchIntervalSeconds()
+                    );
+
+
+                    response.put(
+                            "pegelOnlineServer",
+                            config.pegelOnlineServer()
+                    );
+
+
+                    response.put(
+                            "pegelOnlineApiPath",
+                            config.pegelOnlineApiPath()
+                    );
+
+
+                    response.put(
+                            "weatherEnabled",
+                            config.weatherEnabled()
+                    );
+
+
+                    response.put(
+                            "weatherServer",
+                            config.weatherServer()
+                    );
+
+
+                    response.put(
+                            "mqttBroker",
+                            config.mqttBrokerUri()
+                    );
+
+
+                    response.put(
+                            "mqttClientId",
+                            config.mqttClientId()
+                    );
+
+
+                    JSONArray stations =
+                            new JSONArray();
+
+
+                    for (
+                            AppConfig.StationConfig station
+                            : config.stations()
+                    ) {
+
+                        JSONObject item =
+                                new JSONObject();
+
+
+                        item.put(
+                                "name",
+                                station.name()
+                        );
+
+
+                        item.put(
+                                "apiName",
+                                station.apiName()
+                        );
+
+
+                        item.put(
+                                "uuid",
+                                station.uuid()
+                        );
+
+
+                        item.put(
+                                "latitude",
+                                station.latitude()
+                        );
+
+
+                        item.put(
+                                "longitude",
+                                station.longitude()
+                        );
+
+
+                        stations.put(
+                                item
+                        );
+                    }
+
+
+                    response.put(
+                            "stations",
+                            stations
+                    );
+
+
+                    send(
+                            exchange,
+                            200,
+                            "application/json; charset=UTF-8",
+                            response.toString()
+                    );
+                }
+        );
 
 
         // =====================================================
@@ -291,8 +555,62 @@ public final class WebServer implements AutoCloseable {
     }
 
 
+    // =========================================================
+    // START
+    // =========================================================
+
     public void start() {
+
         server.start();
+
+        System.out.println(
+                "WebServer gestartet auf Port "
+                        + config.httpPort()
+        );
+    }
+
+
+    // =========================================================
+    // DEFAULT STATION
+    // =========================================================
+
+    private String defaultStation() {
+
+        if (
+                config.stationNames().isEmpty()
+        ) {
+
+            throw new IllegalStateException(
+                    "Keine Station konfiguriert."
+            );
+        }
+
+
+        return config
+                .stationNames()
+                .get(0);
+    }
+
+
+    // =========================================================
+    // STATION VALIDIERUNG
+    // =========================================================
+
+    private void validateStation(
+            String station
+    ) {
+
+        if (
+                config.station(
+                        station
+                ) == null
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Unbekannte Station: "
+                            + station
+            );
+        }
     }
 
 
@@ -307,12 +625,15 @@ public final class WebServer implements AutoCloseable {
         Map<String, String> result =
                 new java.util.HashMap<>();
 
+
         if (
                 rawQuery == null
                         || rawQuery.isBlank()
         ) {
+
             return result;
         }
+
 
         for (
                 String parameter
@@ -325,9 +646,14 @@ public final class WebServer implements AutoCloseable {
                             2
                     );
 
-            if (parts.length != 2) {
+
+            if (
+                    parts.length != 2
+            ) {
+
                 continue;
             }
+
 
             String key =
                     URLDecoder.decode(
@@ -335,17 +661,20 @@ public final class WebServer implements AutoCloseable {
                             StandardCharsets.UTF_8
                     );
 
+
             String value =
                     URLDecoder.decode(
                             parts[1],
                             StandardCharsets.UTF_8
                     );
 
+
             result.put(
                     key,
                     value
             );
         }
+
 
         return result;
     }
@@ -364,12 +693,16 @@ public final class WebServer implements AutoCloseable {
                         .getRequestURI()
                         .getPath();
 
+
         String path =
                 requestPath.equals("/")
                         ? "/index.html"
                         : requestPath;
 
-        if (path.contains("..")) {
+
+        if (
+                path.contains("..")
+        ) {
 
             send(
                     exchange,
@@ -381,8 +714,11 @@ public final class WebServer implements AutoCloseable {
             return;
         }
 
+
         String resource =
-                "/web" + path;
+                "/web"
+                        + path;
+
 
         try (
                 InputStream in =
@@ -392,7 +728,9 @@ public final class WebServer implements AutoCloseable {
                                 )
         ) {
 
-            if (in == null) {
+            if (
+                    in == null
+            ) {
 
                 send(
                         exchange,
@@ -404,8 +742,10 @@ public final class WebServer implements AutoCloseable {
                 return;
             }
 
+
             byte[] bytes =
                     in.readAllBytes();
+
 
             String contentType =
                     CONTENT_TYPES
@@ -425,12 +765,14 @@ public final class WebServer implements AutoCloseable {
                                     "application/octet-stream"
                             );
 
+
             exchange
                     .getResponseHeaders()
                     .set(
                             "Content-Type",
                             contentType
                     );
+
 
             exchange
                     .getResponseHeaders()
@@ -439,14 +781,19 @@ public final class WebServer implements AutoCloseable {
                             "no-cache"
                     );
 
+
             exchange.sendResponseHeaders(
                     200,
                     bytes.length
             );
 
+
             exchange
                     .getResponseBody()
-                    .write(bytes);
+                    .write(
+                            bytes
+                    );
+
 
             exchange.close();
         }
@@ -465,25 +812,34 @@ public final class WebServer implements AutoCloseable {
         JSONObject json =
                 new JSONObject();
 
+
         json.put(
                 "error",
                 error
         );
 
+
         String message =
                 exception.getMessage();
 
-        if (message == null) {
+
+        if (
+                message == null
+                        || message.isBlank()
+        ) {
+
             message =
                     exception
                             .getClass()
                             .getSimpleName();
         }
 
+
         json.put(
                 "message",
                 message
         );
+
 
         return json.toString();
     }
@@ -505,12 +861,14 @@ public final class WebServer implements AutoCloseable {
                         StandardCharsets.UTF_8
                 );
 
+
         exchange
                 .getResponseHeaders()
                 .set(
                         "Content-Type",
                         type
                 );
+
 
         exchange
                 .getResponseHeaders()
@@ -519,21 +877,49 @@ public final class WebServer implements AutoCloseable {
                         "no-store"
                 );
 
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "X-Content-Type-Options",
+                        "nosniff"
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "X-Frame-Options",
+                        "SAMEORIGIN"
+                );
+
+
         exchange.sendResponseHeaders(
                 status,
                 bytes.length
         );
 
+
         exchange
                 .getResponseBody()
-                .write(bytes);
+                .write(
+                        bytes
+                );
+
 
         exchange.close();
     }
 
 
+    // =========================================================
+    // SHUTDOWN
+    // =========================================================
+
     @Override
     public void close() {
-        server.stop(1);
+
+        server.stop(
+                1
+        );
     }
 }
