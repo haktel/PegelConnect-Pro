@@ -1,102 +1,916 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="PegelConnect Pro – Live-Dashboard für Wasserstände">
-  <title>PegelConnect Pro</title>
-  <link rel="stylesheet" href="/app.css">
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="description"
+        content="PegelConnect Pro – Hydro & Weather Operations Center"
+    >
+
+    <title>PegelConnect Pro | Hydro & Weather Operations Center</title>
+
+    <!-- Leaflet Map -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <!-- PegelConnect Design -->
+    <link rel="stylesheet" href="/app.css">
 </head>
+
 <body>
-  <a class="skip-link" href="#content">Zum Inhalt</a>
 
-  <header class="topbar">
+<a class="skip-link" href="#content">
+    Zum Inhalt
+</a>
+
+
+<!-- ========================================================= -->
+<!-- TOP NAVIGATION                                            -->
+<!-- ========================================================= -->
+
+<header class="topbar">
+
     <div class="brand">
-      <div class="logo" aria-hidden="true">≈</div>
-      <div>
-        <strong>PegelConnect <span>PRO</span></strong>
-        <small>Live Water Intelligence</small>
-      </div>
+
+        <div class="brand-icon" aria-hidden="true">
+            ≋
+        </div>
+
+        <div class="brand-text">
+
+            <div class="brand-title">
+                PEGELCONNECT
+                <span class="pro-badge">PRO</span>
+            </div>
+
+            <div class="brand-subtitle">
+                HYDRO & WEATHER OPERATIONS CENTER
+            </div>
+
+        </div>
+
     </div>
+
+
+    <div class="topbar-center">
+
+        <label for="stationSelect">
+            Station
+        </label>
+
+        <select id="stationSelect">
+
+            <option value="ALL">
+                Alle Stationen
+            </option>
+
+            <option value="KÖLN">
+                Köln
+            </option>
+
+            <option value="BONN">
+                Bonn
+            </option>
+
+            <option value="MAINZ">
+                Mainz
+            </option>
+
+        </select>
+
+    </div>
+
+
     <div class="system-state">
-      <span id="liveDot" class="dot"></span>
-      <span id="systemText">System wird geprüft…</span>
+
+        <span
+            id="liveDot"
+            class="dot"
+            aria-hidden="true"
+        ></span>
+
+        <span id="systemText">
+            System wird geprüft…
+        </span>
+
     </div>
-  </header>
 
-  <main id="content">
+</header>
+
+
+
+<main id="content">
+
+
+    <!-- ===================================================== -->
+    <!-- HERO / CONTROL CENTER                                 -->
+    <!-- ===================================================== -->
+
     <section class="hero">
-      <div>
-        <p class="eyebrow">PEGELONLINE · MQTT · JAVA 17</p>
-        <h1>Wasserstände.<br><span>Live. Klar. Vernetzt.</span></h1>
-        <p>Moderne Visualisierung der Pegelstände Köln, Mainz und Bonn – mit MQTT-Status, Trend und Verlauf.</p>
-      </div>
-      <div class="hero-metric">
-        <small>Letztes Update</small>
-        <strong id="lastUpdate">–</strong>
-        <span id="mqttState">MQTT: –</span>
-      </div>
-    </section>
 
-    <section class="cards" aria-label="Aktuelle Pegelstände">
-      <article class="station-card" data-station="KOELN">
-        <div class="card-top"><span>KÖLN</span><span class="trend" id="trend-KOELN">•</span></div>
-        <div class="value"><strong id="value-KOELN">–</strong><span>cm</span></div>
-        <div class="water"><div id="water-KOELN" class="water-fill"></div></div>
-        <small id="time-KOELN">Noch keine Messung</small>
-      </article>
+        <div class="hero-content">
 
-      <article class="station-card" data-station="MAINZ">
-        <div class="card-top"><span>MAINZ</span><span class="trend" id="trend-MAINZ">•</span></div>
-        <div class="value"><strong id="value-MAINZ">–</strong><span>cm</span></div>
-        <div class="water"><div id="water-MAINZ" class="water-fill"></div></div>
-        <small id="time-MAINZ">Noch keine Messung</small>
-      </article>
+            <p class="eyebrow">
+                PEGELONLINE · WEATHER · MQTT · JAVA 17 · NGINX
+            </p>
 
-      <article class="station-card" data-station="BONN">
-        <div class="card-top"><span>BONN</span><span class="trend" id="trend-BONN">•</span></div>
-        <div class="value"><strong id="value-BONN">–</strong><span>cm</span></div>
-        <div class="water"><div id="water-BONN" class="water-fill"></div></div>
-        <small id="time-BONN">Noch keine Messung</small>
-      </article>
-    </section>
+            <h1>
+                Rhein Intelligence
+                <span>Control Center</span>
+            </h1>
 
-    <section class="panel">
-      <div class="panel-head">
-        <div>
-          <p class="eyebrow">VERLAUF</p>
-          <h2>Messhistorie</h2>
+            <p class="hero-description">
+                Live-Wasserstände, Wetterdaten, geografische
+                Informationen und Infrastrukturstatus für
+                Köln, Bonn und Mainz.
+            </p>
+
+
+            <div class="hero-status-row">
+
+                <span class="hero-chip">
+                    ● LIVE DATA
+                </span>
+
+                <span class="hero-chip">
+                    MQTT
+                </span>
+
+                <span class="hero-chip">
+                    REST API
+                </span>
+
+                <span class="hero-chip">
+                    NGINX
+                </span>
+
+                <span class="hero-chip">
+                    JAVA 17
+                </span>
+
+            </div>
+
         </div>
-        <div class="legend" aria-label="Diagrammlegende">
-          <span><i class="k"></i>Köln</span><span><i class="m"></i>Mainz</span><span><i class="b"></i>Bonn</span>
+
+
+        <aside class="hero-metric">
+
+            <span class="metric-label">
+                LETZTES PEGEL-UPDATE
+            </span>
+
+            <strong id="lastUpdate">
+                –
+            </strong>
+
+            <span id="mqttState">
+                MQTT: –
+            </span>
+
+        </aside>
+
+    </section>
+
+
+
+    <!-- ===================================================== -->
+    <!-- STATIONEN                                             -->
+    <!-- ===================================================== -->
+
+    <section
+        class="station-grid"
+        aria-label="Pegelstationen"
+    >
+
+
+        <!-- ======================== -->
+        <!-- KÖLN                     -->
+        <!-- ======================== -->
+
+        <article
+            class="station-card"
+            data-station="KÖLN"
+        >
+
+            <header class="station-header">
+
+                <div class="city-identity">
+
+                    <img
+                        class="city-wappen"
+                        src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Wappen_Koeln.svg"
+                        alt="Wappen der Stadt Köln"
+                    >
+
+                    <div>
+
+                        <span class="station-label">
+                            PEGELSTATION
+                        </span>
+
+                        <h2>
+                            Köln
+                        </h2>
+
+                        <span class="coordinates">
+                            50.9375° N · 6.9603° E
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    class="trend"
+                    id="trend-KOELN"
+                    aria-label="Pegeltrend Köln"
+                >
+                    •
+                </span>
+
+            </header>
+
+
+            <div class="station-main-value">
+
+                <span class="value-label">
+                    WASSERSTAND
+                </span>
+
+                <div class="value">
+
+                    <strong id="value-KOELN">
+                        –
+                    </strong>
+
+                    <span>
+                        cm
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="water">
+
+                <div
+                    id="water-KOELN"
+                    class="water-fill"
+                ></div>
+
+            </div>
+
+
+            <div class="weather-mini-grid">
+
+                <div>
+                    <span>Temperatur</span>
+                    <strong id="weather-temp-KOELN">–</strong>
+                </div>
+
+                <div>
+                    <span>Gefühlt</span>
+                    <strong id="weather-feels-KOELN">–</strong>
+                </div>
+
+                <div>
+                    <span>Wind</span>
+                    <strong id="weather-wind-KOELN">–</strong>
+                </div>
+
+                <div>
+                    <span>Niederschlag</span>
+                    <strong id="weather-rain-KOELN">–</strong>
+                </div>
+
+            </div>
+
+
+            <footer class="station-footer">
+
+                <span id="time-KOELN">
+                    Noch keine Messung
+                </span>
+
+                <span
+                    id="status-KOELN"
+                    class="station-status"
+                >
+                    DATEN WERDEN GELADEN
+                </span>
+
+            </footer>
+
+        </article>
+
+
+
+        <!-- ======================== -->
+        <!-- BONN                     -->
+        <!-- ======================== -->
+
+        <article
+            class="station-card"
+            data-station="BONN"
+        >
+
+            <header class="station-header">
+
+                <div class="city-identity">
+
+                    <img
+                        class="city-wappen"
+                        src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Wappen_Bonn.svg"
+                        alt="Wappen der Stadt Bonn"
+                    >
+
+                    <div>
+
+                        <span class="station-label">
+                            PEGELSTATION
+                        </span>
+
+                        <h2>
+                            Bonn
+                        </h2>
+
+                        <span class="coordinates">
+                            50.7374° N · 7.0982° E
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    class="trend"
+                    id="trend-BONN"
+                >
+                    •
+                </span>
+
+            </header>
+
+
+            <div class="station-main-value">
+
+                <span class="value-label">
+                    WASSERSTAND
+                </span>
+
+                <div class="value">
+
+                    <strong id="value-BONN">
+                        –
+                    </strong>
+
+                    <span>
+                        cm
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="water">
+
+                <div
+                    id="water-BONN"
+                    class="water-fill"
+                ></div>
+
+            </div>
+
+
+            <div class="weather-mini-grid">
+
+                <div>
+                    <span>Temperatur</span>
+                    <strong id="weather-temp-BONN">–</strong>
+                </div>
+
+                <div>
+                    <span>Gefühlt</span>
+                    <strong id="weather-feels-BONN">–</strong>
+                </div>
+
+                <div>
+                    <span>Wind</span>
+                    <strong id="weather-wind-BONN">–</strong>
+                </div>
+
+                <div>
+                    <span>Niederschlag</span>
+                    <strong id="weather-rain-BONN">–</strong>
+                </div>
+
+            </div>
+
+
+            <footer class="station-footer">
+
+                <span id="time-BONN">
+                    Noch keine Messung
+                </span>
+
+                <span
+                    id="status-BONN"
+                    class="station-status"
+                >
+                    DATEN WERDEN GELADEN
+                </span>
+
+            </footer>
+
+        </article>
+
+
+
+        <!-- ======================== -->
+        <!-- MAINZ                    -->
+        <!-- ======================== -->
+
+        <article
+            class="station-card"
+            data-station="MAINZ"
+        >
+
+            <header class="station-header">
+
+                <div class="city-identity">
+
+                    <img
+                        class="city-wappen"
+                        src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Coat_of_arms_of_Mainz.svg"
+                        alt="Wappen der Stadt Mainz"
+                    >
+
+                    <div>
+
+                        <span class="station-label">
+                            PEGELSTATION
+                        </span>
+
+                        <h2>
+                            Mainz
+                        </h2>
+
+                        <span class="coordinates">
+                            49.9929° N · 8.2473° E
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    class="trend"
+                    id="trend-MAINZ"
+                >
+                    •
+                </span>
+
+            </header>
+
+
+            <div class="station-main-value">
+
+                <span class="value-label">
+                    WASSERSTAND
+                </span>
+
+                <div class="value">
+
+                    <strong id="value-MAINZ">
+                        –
+                    </strong>
+
+                    <span>
+                        cm
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="water">
+
+                <div
+                    id="water-MAINZ"
+                    class="water-fill"
+                ></div>
+
+            </div>
+
+
+            <div class="weather-mini-grid">
+
+                <div>
+                    <span>Temperatur</span>
+                    <strong id="weather-temp-MAINZ">–</strong>
+                </div>
+
+                <div>
+                    <span>Gefühlt</span>
+                    <strong id="weather-feels-MAINZ">–</strong>
+                </div>
+
+                <div>
+                    <span>Wind</span>
+                    <strong id="weather-wind-MAINZ">–</strong>
+                </div>
+
+                <div>
+                    <span>Niederschlag</span>
+                    <strong id="weather-rain-MAINZ">–</strong>
+                </div>
+
+            </div>
+
+
+            <footer class="station-footer">
+
+                <span id="time-MAINZ">
+                    Noch keine Messung
+                </span>
+
+                <span
+                    id="status-MAINZ"
+                    class="station-status"
+                >
+                    DATEN WERDEN GELADEN
+                </span>
+
+            </footer>
+
+        </article>
+
+    </section>
+
+
+
+    <!-- ===================================================== -->
+    <!-- MAP + LIVE MELDUNGEN                                  -->
+    <!-- ===================================================== -->
+
+    <section class="operations-grid">
+
+
+        <article class="panel map-panel">
+
+            <header class="panel-head">
+
+                <div>
+
+                    <p class="eyebrow">
+                        GEO INTELLIGENCE
+                    </p>
+
+                    <h2>
+                        Rhein · Stationskarte
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    LIVE MAP
+                </span>
+
+            </header>
+
+
+            <div
+                id="stationMap"
+                class="station-map"
+                aria-label="Karte der Pegelstationen Köln, Bonn und Mainz"
+            ></div>
+
+        </article>
+
+
+
+        <article class="panel alerts-panel">
+
+            <header class="panel-head">
+
+                <div>
+
+                    <p class="eyebrow">
+                        OPERATIONS
+                    </p>
+
+                    <h2>
+                        Live-Meldungen
+                    </h2>
+
+                </div>
+
+                <span
+                    id="alertCounter"
+                    class="panel-badge"
+                >
+                    0
+                </span>
+
+            </header>
+
+
+            <div id="alertsList" class="alerts-list">
+
+                <div class="alert-item info">
+
+                    <span class="alert-dot"></span>
+
+                    <div>
+
+                        <strong>
+                            Systeminitialisierung
+                        </strong>
+
+                        <p>
+                            Live-Daten werden geladen.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+
+    <!-- ===================================================== -->
+    <!-- CHART                                                 -->
+    <!-- ===================================================== -->
+
+    <section class="panel chart-panel">
+
+        <header class="panel-head">
+
+            <div>
+
+                <p class="eyebrow">
+                    HYDRO ANALYTICS
+                </p>
+
+                <h2>
+                    Pegelverlauf
+                </h2>
+
+            </div>
+
+
+            <div class="chart-actions">
+
+                <button
+                    class="chart-range active"
+                    data-range="24h"
+                >
+                    24H
+                </button>
+
+                <button
+                    class="chart-range"
+                    data-range="7d"
+                >
+                    7T
+                </button>
+
+                <button
+                    class="chart-range"
+                    data-range="30d"
+                >
+                    30T
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <div class="legend">
+
+            <span>
+                <i class="k"></i>
+                Köln
+            </span>
+
+            <span>
+                <i class="b"></i>
+                Bonn
+            </span>
+
+            <span>
+                <i class="m"></i>
+                Mainz
+            </span>
+
         </div>
-      </div>
-      <canvas id="chart" width="1200" height="360" aria-label="Diagramm der Pegelstände"></canvas>
+
+
+        <canvas
+            id="chart"
+            width="1200"
+            height="360"
+            aria-label="Pegelverlauf Köln, Bonn und Mainz"
+        ></canvas>
+
     </section>
 
-    <section class="status-grid">
-      <article class="status-box">
-        <small>JAVA BACKEND</small><strong id="backendStatus">ONLINE</strong>
-      </article>
-      <article class="status-box">
-        <small>MQTT BROKER</small><strong id="brokerStatus">PRÜFUNG…</strong>
-      </article>
-      <article class="status-box">
-        <small>DATENQUELLE</small><strong>PEGELONLINE</strong>
-      </article>
-      <article class="status-box">
-        <small>INTERVALL</small><strong>1 STUNDE</strong>
-      </article>
+
+
+    <!-- ===================================================== -->
+    <!-- INFRASTRUCTURE                                        -->
+    <!-- ===================================================== -->
+
+    <section class="infrastructure">
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    SYSTEM HEALTH
+                </p>
+
+                <h2>
+                    Infrastruktur
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="status-grid">
+
+
+            <article class="status-box">
+
+                <span class="service-icon">
+                    JAVA
+                </span>
+
+                <div>
+
+                    <small>
+                        JAVA 17 BACKEND
+                    </small>
+
+                    <strong id="backendStatus">
+                        ONLINE
+                    </strong>
+
+                </div>
+
+            </article>
+
+
+            <article class="status-box">
+
+                <span class="service-icon">
+                    MQTT
+                </span>
+
+                <div>
+
+                    <small>
+                        MOSQUITTO BROKER
+                    </small>
+
+                    <strong id="brokerStatus">
+                        PRÜFUNG…
+                    </strong>
+
+                </div>
+
+            </article>
+
+
+            <article class="status-box">
+
+                <span class="service-icon">
+                    WEB
+                </span>
+
+                <div>
+
+                    <small>
+                        NGINX REVERSE PROXY
+                    </small>
+
+                    <strong>
+                        ONLINE
+                    </strong>
+
+                </div>
+
+            </article>
+
+
+            <article class="status-box">
+
+                <span class="service-icon">
+                    API
+                </span>
+
+                <div>
+
+                    <small>
+                        PEGELONLINE
+                    </small>
+
+                    <strong>
+                        CONNECTED
+                    </strong>
+
+                </div>
+
+            </article>
+
+
+            <article class="status-box">
+
+                <span class="service-icon">
+                    WX
+                </span>
+
+                <div>
+
+                    <small>
+                        WEATHER API
+                    </small>
+
+                    <strong id="weatherApiStatus">
+                        PRÜFUNG…
+                    </strong>
+
+                </div>
+
+            </article>
+
+        </div>
+
     </section>
 
-    <p id="errorBox" class="error" hidden></p>
-  </main>
 
-  <footer>
-    <span>© www.pegelonline.wsv.de</span>
-    <span>PegelConnect Pro · BAIS IT Solutions</span>
-  </footer>
+    <p
+        id="errorBox"
+        class="error"
+        hidden
+    ></p>
 
-  <script src="/app.js" defer></script>
+</main>
+
+
+
+<!-- ========================================================= -->
+<!-- FOOTER                                                    -->
+<!-- ========================================================= -->
+
+<footer class="site-footer">
+
+    <div>
+        PegelConnect Pro
+        · Hydro & Weather Operations Center
+    </div>
+
+    <div>
+        PEGELONLINE · OpenStreetMap · Wikimedia Commons
+    </div>
+
+</footer>
+
+
+
+<!-- Leaflet -->
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+<!-- Application -->
+<script
+    src="/app.js"
+    defer
+></script>
+
 </body>
 </html>
