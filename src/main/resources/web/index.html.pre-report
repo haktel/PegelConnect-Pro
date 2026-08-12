@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="de">
-
 <head>
     <meta charset="utf-8">
 
@@ -14,40 +13,34 @@
         content="PegelConnect Pro – Hydro & Weather Operations Center"
     >
 
-    <title>
-        PegelConnect Pro | Hydro & Weather Operations Center
-    </title>
+    <title>PegelConnect Pro | Hydro & Weather Operations Center</title>
 
+    <!-- Leaflet Map -->
     <link
         rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     >
 
-    <link
-        rel="stylesheet"
-        href="/app.css"
-    >
+    <!-- PegelConnect Design -->
+    <link rel="stylesheet" href="/app.css">
 </head>
-
 
 <body>
 
-<a
-    class="skip-link"
-    href="#content"
->
+<a class="skip-link" href="#content">
     Zum Inhalt
 </a>
 
+
+<!-- ========================================================= -->
+<!-- TOP NAVIGATION                                            -->
+<!-- ========================================================= -->
 
 <header class="topbar">
 
     <div class="brand">
 
-        <div
-            class="brand-icon"
-            aria-hidden="true"
-        >
+        <div class="brand-icon" aria-hidden="true">
             ≋
         </div>
 
@@ -55,9 +48,7 @@
 
             <div class="brand-title">
                 PEGELCONNECT
-                <span class="pro-badge">
-                    PRO
-                </span>
+                <span class="pro-badge">PRO</span>
             </div>
 
             <div class="brand-subtitle">
@@ -120,7 +111,7 @@
 
 
     <!-- ===================================================== -->
-    <!-- HERO                                                  -->
+    <!-- HERO / CONTROL CENTER                                 -->
     <!-- ===================================================== -->
 
     <section class="hero">
@@ -133,17 +124,13 @@
 
             <h1>
                 Rhein Intelligence
-                <span>
-                    Control Center
-                </span>
+                <span>Control Center</span>
             </h1>
 
             <p class="hero-description">
-                Live-Wasserstände, Wetterdaten,
-                geografische Informationen,
-                historische Analysen und
-                Infrastrukturstatus für Köln,
-                Bonn und Mainz.
+                Live-Wasserstände, Wetterdaten, geografische
+                Informationen und Infrastrukturstatus für
+                Köln, Bonn und Mainz.
             </p>
 
 
@@ -204,7 +191,9 @@
     >
 
 
-        <!-- KÖLN -->
+        <!-- ======================== -->
+        <!-- KÖLN                     -->
+        <!-- ======================== -->
 
         <article
             class="station-card"
@@ -245,7 +234,7 @@
                     id="trend-KOELN"
                     aria-label="Pegeltrend Köln"
                 >
-                    →
+                    •
                 </span>
 
             </header>
@@ -286,30 +275,22 @@
 
                 <div>
                     <span>Temperatur</span>
-                    <strong id="weather-temp-KOELN">
-                        –
-                    </strong>
+                    <strong id="weather-temp-KOELN">–</strong>
                 </div>
 
                 <div>
                     <span>Gefühlt</span>
-                    <strong id="weather-feels-KOELN">
-                        –
-                    </strong>
+                    <strong id="weather-feels-KOELN">–</strong>
                 </div>
 
                 <div>
                     <span>Wind</span>
-                    <strong id="weather-wind-KOELN">
-                        –
-                    </strong>
+                    <strong id="weather-wind-KOELN">–</strong>
                 </div>
 
                 <div>
                     <span>Niederschlag</span>
-                    <strong id="weather-rain-KOELN">
-                        –
-                    </strong>
+                    <strong id="weather-rain-KOELN">–</strong>
                 </div>
 
             </div>
@@ -334,7 +315,9 @@
 
 
 
-        <!-- BONN -->
+        <!-- ======================== -->
+        <!-- BONN                     -->
+        <!-- ======================== -->
 
         <article
             class="station-card"
@@ -374,7 +357,7 @@
                     class="trend"
                     id="trend-BONN"
                 >
-                    →
+                    •
                 </span>
 
             </header>
@@ -415,30 +398,22 @@
 
                 <div>
                     <span>Temperatur</span>
-                    <strong id="weather-temp-BONN">
-                        –
-                    </strong>
+                    <strong id="weather-temp-BONN">–</strong>
                 </div>
 
                 <div>
                     <span>Gefühlt</span>
-                    <strong id="weather-feels-BONN">
-                        –
-                    </strong>
+                    <strong id="weather-feels-BONN">–</strong>
                 </div>
 
                 <div>
                     <span>Wind</span>
-                    <strong id="weather-wind-BONN">
-                        –
-                    </strong>
+                    <strong id="weather-wind-BONN">–</strong>
                 </div>
 
                 <div>
                     <span>Niederschlag</span>
-                    <strong id="weather-rain-BONN">
-                        –
-                    </strong>
+                    <strong id="weather-rain-BONN">–</strong>
                 </div>
 
             </div>
@@ -463,7 +438,9 @@
 
 
 
-        <!-- MAINZ -->
+        <!-- ======================== -->
+        <!-- MAINZ                    -->
+        <!-- ======================== -->
 
         <article
             class="station-card"
@@ -503,7 +480,7 @@
                     class="trend"
                     id="trend-MAINZ"
                 >
-                    →
+                    •
                 </span>
 
             </header>
@@ -544,30 +521,22 @@
 
                 <div>
                     <span>Temperatur</span>
-                    <strong id="weather-temp-MAINZ">
-                        –
-                    </strong>
+                    <strong id="weather-temp-MAINZ">–</strong>
                 </div>
 
                 <div>
                     <span>Gefühlt</span>
-                    <strong id="weather-feels-MAINZ">
-                        –
-                    </strong>
+                    <strong id="weather-feels-MAINZ">–</strong>
                 </div>
 
                 <div>
                     <span>Wind</span>
-                    <strong id="weather-wind-MAINZ">
-                        –
-                    </strong>
+                    <strong id="weather-wind-MAINZ">–</strong>
                 </div>
 
                 <div>
                     <span>Niederschlag</span>
-                    <strong id="weather-rain-MAINZ">
-                        –
-                    </strong>
+                    <strong id="weather-rain-MAINZ">–</strong>
                 </div>
 
             </div>
@@ -660,11 +629,7 @@
             </header>
 
 
-            <div
-                id="alertsList"
-                class="alerts-list"
-                aria-live="polite"
-            >
+            <div id="alertsList" class="alerts-list">
 
                 <div class="alert-item info">
 
@@ -693,7 +658,7 @@
 
 
     <!-- ===================================================== -->
-    <!-- HISTORY CHART                                         -->
+    <!-- CHART                                                 -->
     <!-- ===================================================== -->
 
     <section class="panel chart-panel">
@@ -713,32 +678,25 @@
             </div>
 
 
-            <div
-                class="chart-actions"
-                role="group"
-                aria-label="Zeitraum des Pegelverlaufs"
-            >
+            <div class="chart-actions">
 
                 <button
                     class="chart-range active"
-                    data-period="24h"
-                    type="button"
+                    data-range="24h"
                 >
                     24H
                 </button>
 
                 <button
                     class="chart-range"
-                    data-period="7d"
-                    type="button"
+                    data-range="7d"
                 >
                     7T
                 </button>
 
                 <button
                     class="chart-range"
-                    data-period="30d"
-                    type="button"
+                    data-range="30d"
                 >
                     30T
                 </button>
@@ -772,497 +730,8 @@
             id="chart"
             width="1200"
             height="360"
-            aria-label="Historischer Pegelverlauf Köln, Bonn und Mainz"
+            aria-label="Pegelverlauf Köln, Bonn und Mainz"
         ></canvas>
-
-    </section>
-
-
-
-    <!-- ===================================================== -->
-    <!-- REPORTS & ARCHIVE                                     -->
-    <!-- ===================================================== -->
-
-    <section
-        class="report-section"
-        aria-labelledby="reportTitle"
-    >
-
-        <header class="section-heading report-heading">
-
-            <div>
-
-                <p class="eyebrow">
-                    REPORTS & ARCHIVE
-                </p>
-
-                <h2 id="reportTitle">
-                    Historische Auswertung
-                </h2>
-
-                <p class="section-description">
-                    Statistische Auswertung der geladenen
-                    PEGELONLINE-Messwerte.
-                </p>
-
-            </div>
-
-
-            <div
-                class="report-period"
-                role="group"
-                aria-label="Zeitraum für Report"
-            >
-
-                <button
-                    type="button"
-                    class="report-range active"
-                    data-period="24h"
-                >
-                    24H
-                </button>
-
-                <button
-                    type="button"
-                    class="report-range"
-                    data-period="7d"
-                >
-                    7 TAGE
-                </button>
-
-                <button
-                    type="button"
-                    class="report-range"
-                    data-period="30d"
-                >
-                    30 TAGE
-                </button>
-
-            </div>
-
-        </header>
-
-
-
-        <div class="report-grid">
-
-
-            <!-- KÖLN -->
-
-            <article class="report-card">
-
-                <header class="report-card-head">
-
-                    <div>
-
-                        <span class="station-label">
-                            REPORT
-                        </span>
-
-                        <h3>
-                            Köln
-                        </h3>
-
-                    </div>
-
-                    <span
-                        id="report-trend-KOELN"
-                        class="report-trend"
-                    >
-                        –
-                    </span>
-
-                </header>
-
-
-                <div class="report-stat-grid">
-
-                    <div>
-                        <span>Minimum</span>
-                        <strong id="report-min-KOELN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Maximum</span>
-                        <strong id="report-max-KOELN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Durchschnitt</span>
-                        <strong id="report-avg-KOELN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Änderung</span>
-                        <strong id="report-delta-KOELN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Messpunkte</span>
-                        <strong id="report-count-KOELN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Status</span>
-                        <strong id="report-status-KOELN">
-                            –
-                        </strong>
-                    </div>
-
-                </div>
-
-            </article>
-
-
-
-            <!-- BONN -->
-
-            <article class="report-card">
-
-                <header class="report-card-head">
-
-                    <div>
-
-                        <span class="station-label">
-                            REPORT
-                        </span>
-
-                        <h3>
-                            Bonn
-                        </h3>
-
-                    </div>
-
-                    <span
-                        id="report-trend-BONN"
-                        class="report-trend"
-                    >
-                        –
-                    </span>
-
-                </header>
-
-
-                <div class="report-stat-grid">
-
-                    <div>
-                        <span>Minimum</span>
-                        <strong id="report-min-BONN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Maximum</span>
-                        <strong id="report-max-BONN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Durchschnitt</span>
-                        <strong id="report-avg-BONN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Änderung</span>
-                        <strong id="report-delta-BONN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Messpunkte</span>
-                        <strong id="report-count-BONN">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Status</span>
-                        <strong id="report-status-BONN">
-                            –
-                        </strong>
-                    </div>
-
-                </div>
-
-            </article>
-
-
-
-            <!-- MAINZ -->
-
-            <article class="report-card">
-
-                <header class="report-card-head">
-
-                    <div>
-
-                        <span class="station-label">
-                            REPORT
-                        </span>
-
-                        <h3>
-                            Mainz
-                        </h3>
-
-                    </div>
-
-                    <span
-                        id="report-trend-MAINZ"
-                        class="report-trend"
-                    >
-                        –
-                    </span>
-
-                </header>
-
-
-                <div class="report-stat-grid">
-
-                    <div>
-                        <span>Minimum</span>
-                        <strong id="report-min-MAINZ">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Maximum</span>
-                        <strong id="report-max-MAINZ">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Durchschnitt</span>
-                        <strong id="report-avg-MAINZ">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Änderung</span>
-                        <strong id="report-delta-MAINZ">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Messpunkte</span>
-                        <strong id="report-count-MAINZ">
-                            –
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Status</span>
-                        <strong id="report-status-MAINZ">
-                            –
-                        </strong>
-                    </div>
-
-                </div>
-
-            </article>
-
-        </div>
-
-
-
-        <div class="report-toolbar">
-
-            <div>
-
-                <strong>
-                    Datenexport
-                </strong>
-
-                <p>
-                    Aktuell geladenen Zeitraum exportieren.
-                </p>
-
-            </div>
-
-
-            <div class="report-actions">
-
-                <button
-                    id="exportCsv"
-                    type="button"
-                    class="export-button"
-                >
-                    CSV exportieren
-                </button>
-
-                <button
-                    id="exportJson"
-                    type="button"
-                    class="export-button"
-                >
-                    JSON exportieren
-                </button>
-
-                <button
-                    id="exportPdf"
-                    type="button"
-                    class="export-button"
-                    disabled
-                    title="PDF-Export folgt im nächsten Modul"
-                >
-                    PDF Report
-                </button>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- ===================================================== -->
-    <!-- EVENT LOG + CONFIG                                    -->
-    <!-- ===================================================== -->
-
-    <section class="operations-grid">
-
-
-        <article class="panel">
-
-            <header class="panel-head">
-
-                <div>
-
-                    <p class="eyebrow">
-                        EVENT LOG
-                    </p>
-
-                    <h2>
-                        System- und Ereignisprotokoll
-                    </h2>
-
-                </div>
-
-                <span
-                    id="eventCounter"
-                    class="panel-badge"
-                >
-                    0 EVENTS
-                </span>
-
-            </header>
-
-
-            <div
-                id="eventLog"
-                class="event-log"
-                aria-live="polite"
-            >
-
-                <div class="event-row">
-
-                    <time>
-                        –
-                    </time>
-
-                    <span class="event-source">
-                        SYSTEM
-                    </span>
-
-                    <span>
-                        Ereignisprotokoll wird initialisiert.
-                    </span>
-
-                </div>
-
-            </div>
-
-        </article>
-
-
-
-        <article class="panel">
-
-            <header class="panel-head">
-
-                <div>
-
-                    <p class="eyebrow">
-                        CONFIGURATION
-                    </p>
-
-                    <h2>
-                        Laufzeitkonfiguration
-                    </h2>
-
-                </div>
-
-                <span class="panel-badge">
-                    READ ONLY
-                </span>
-
-            </header>
-
-
-            <dl class="config-list">
-
-                <div>
-                    <dt>Datenquelle</dt>
-                    <dd>PEGELONLINE</dd>
-                </div>
-
-                <div>
-                    <dt>Weather</dt>
-                    <dd>REST API</dd>
-                </div>
-
-                <div>
-                    <dt>MQTT Broker</dt>
-                    <dd>localhost:1883</dd>
-                </div>
-
-                <div>
-                    <dt>Backend</dt>
-                    <dd>Java 17</dd>
-                </div>
-
-                <div>
-                    <dt>Reverse Proxy</dt>
-                    <dd>NGINX</dd>
-                </div>
-
-                <div>
-                    <dt>Historie</dt>
-                    <dd>24H / 7T / 30T</dd>
-                </div>
-
-                <div>
-                    <dt>Live Refresh</dt>
-                    <dd>60 Sekunden</dd>
-                </div>
-
-                <div>
-                    <dt>Dashboard</dt>
-                    <dd>PegelConnect Pro</dd>
-                </div>
-
-            </dl>
-
-        </article>
 
     </section>
 
@@ -1407,12 +876,15 @@
         id="errorBox"
         class="error"
         hidden
-        role="alert"
     ></p>
 
 </main>
 
 
+
+<!-- ========================================================= -->
+<!-- FOOTER                                                    -->
+<!-- ========================================================= -->
 
 <footer class="site-footer">
 
@@ -1429,10 +901,12 @@
 
 
 
+<!-- Leaflet -->
 <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ></script>
 
+<!-- Application -->
 <script
     src="/app.js"
     defer

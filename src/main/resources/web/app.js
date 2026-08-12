@@ -35,9 +35,16 @@ let markers = {};
 
 let latestState = null;
 let weatherCache = {};
-
 let historyCache = {};
+
 let selectedHistoryPeriod = "24h";
+let selectedReportPeriod = "24h";
+
+const eventLog = [];
+const MAX_EVENTS = 100;
+
+const previousValues = {};
+let previousMqttState = null;
 
 
 // ============================================================
@@ -63,6 +70,31 @@ function fmtTime(value) {
 }
 
 
+function fmtEventTime(value = new Date()) {
+    return value.toLocaleTimeString(
+        "de-DE",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        }
+    );
+}
+
+
+function periodLabel(period = selectedHistoryPeriod) {
+    if (period === "7d") {
+        return "7 Tage";
+    }
+
+    if (period === "30d") {
+        return "30 Tage";
+    }
+
+    return "24 Stunden";
+}
+
+
 function trendSymbol(value) {
     if (value > 0) {
         return "↑";
@@ -73,6 +105,17 @@ function trendSymbol(value) {
     }
 
     return "→";
+}
+
+
+function signed(value, decimals = 0) {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return "–";
+    }
+
+    return `${number > 0 ? "+" : ""}${number.toFixed(decimals)}`;
 }
 
 
@@ -111,14 +154,14 @@ function weatherDescription(code) {
 // ============================================================
 
 function calculateHistoryStats(values) {
-    if (!values || values.length === 0) {
+    if (!values || !values.length) {
         return null;
     }
 
     const clean = values
         .map(item => ({
-            value: Number(item.value),
-            timestamp: item.timestamp
+            timestamp: item.timestamp,
+            value: Number(item.value)
         }))
         .filter(item => Number.isFinite(item.value));
 
@@ -126,11 +169,14 @@ function calculateHistoryStats(values) {
         return null;
     }
 
-    const first = clean[0];
-    const last = clean[clean.length - 1];
-
     const numbers =
         clean.map(item => item.value);
+
+    const first =
+        clean[0];
+
+    const last =
+        clean[clean.length - 1];
 
     const min =
         Math.min(...numbers);
@@ -166,7 +212,8 @@ function calculateHistoryStats(values) {
         delta,
         trend,
         count: clean.length,
-        timestamp: last.timestamp
+        firstTimestamp: first.timestamp,
+        lastTimestamp: last.timestamp
     };
 }
 
@@ -184,7 +231,7 @@ function monitoringStatus(stats) {
 
     /*
      * Technischer Monitoring-Status.
-     * Noch KEINE amtliche Hochwasserwarnstufe.
+     * KEINE amtliche Hochwasserwarnstufe.
      */
 
     if (absDelta >= 30) {
@@ -215,16 +262,105 @@ function monitoringStatus(stats) {
 }
 
 
-function periodLabel() {
-    if (selectedHistoryPeriod === "7d") {
-        return "7 Tage";
+// ============================================================
+// EVENT LOG
+// ============================================================
+
+function addEvent(
+    source,
+    message,
+    type = "info"
+) {
+    const last =
+        eventLog[0];
+
+    /*
+     * Identische Meldungen nicht
+     * sekündlich mehrfach eintragen.
+     */
+    if (
+        last
+        && last.source === source
+        && last.message === message
+    ) {
+        return;
     }
 
-    if (selectedHistoryPeriod === "30d") {
-        return "30 Tage";
+    eventLog.unshift({
+        timestamp: new Date().toISOString(),
+        displayTime: fmtEventTime(),
+        source,
+        message,
+        type
+    });
+
+    if (eventLog.length > MAX_EVENTS) {
+        eventLog.length =
+            MAX_EVENTS;
     }
 
-    return "24 Stunden";
+    renderEventLog();
+}
+
+
+function renderEventLog() {
+    const container =
+        document.getElementById(
+            "eventLog"
+        );
+
+    const counter =
+        document.getElementById(
+            "eventCounter"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    if (!eventLog.length) {
+        container.innerHTML = `
+            <div class="event-row">
+                <time>–</time>
+                <span class="event-source">
+                    SYSTEM
+                </span>
+                <span>
+                    Noch keine Ereignisse.
+                </span>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+        eventLog
+            .slice(0, 50)
+            .map(event => `
+                <div
+                    class="event-row"
+                    data-type="${event.type}"
+                >
+                    <time datetime="${event.timestamp}">
+                        ${event.displayTime}
+                    </time>
+
+                    <span class="event-source">
+                        ${event.source}
+                    </span>
+
+                    <span>
+                        ${event.message}
+                    </span>
+                </div>
+            `)
+            .join("");
+
+    if (counter) {
+        counter.textContent =
+            `${eventLog.length} EVENTS`;
+    }
 }
 
 
@@ -232,7 +368,10 @@ function periodLabel() {
 // STATION CARDS
 // ============================================================
 
-function updateStationCard(station, reading) {
+function updateStationCard(
+    station,
+    reading
+) {
     if (!reading) {
         return;
     }
@@ -265,15 +404,19 @@ function updateStationCard(station, reading) {
             `status-${domId}`
         );
 
+    const currentValue =
+        Number(reading.value);
+
     if (valueEl) {
         valueEl.textContent =
-            Number(reading.value)
-                .toFixed(0);
+            currentValue.toFixed(0);
     }
 
     if (timeEl) {
         timeEl.textContent =
-            fmtTime(reading.timestamp);
+            fmtTime(
+                reading.timestamp
+            );
     }
 
     if (waterEl) {
@@ -282,7 +425,7 @@ function updateStationCard(station, reading) {
                 4,
                 Math.min(
                     100,
-                    Number(reading.value) / 6
+                    currentValue / 6
                 )
             );
 
@@ -291,7 +434,9 @@ function updateStationCard(station, reading) {
     }
 
     if (trendEl) {
-        trendEl.textContent = "→";
+        trendEl.textContent =
+            "→";
+
         trendEl.title =
             "Trend wird aus PEGELONLINE-Historie berechnet";
     }
@@ -300,16 +445,47 @@ function updateStationCard(station, reading) {
         statusEl.textContent =
             "LIVE";
     }
+
+
+    /*
+     * Pegeländerung als Event erkennen.
+     */
+
+    if (
+        Object.prototype.hasOwnProperty.call(
+            previousValues,
+            station
+        )
+    ) {
+        const previous =
+            previousValues[station];
+
+        if (previous !== currentValue) {
+            const delta =
+                currentValue - previous;
+
+            addEvent(
+                "PEGEL",
+                `${locations[station].label}: ${previous.toFixed(0)} cm → ${currentValue.toFixed(0)} cm (${signed(delta)} cm)`,
+                delta > 0
+                    ? "warning"
+                    : "info"
+            );
+        }
+    }
+
+    previousValues[station] =
+        currentValue;
 }
 
 
 function updateHistoryIndicators() {
     stations.forEach(station => {
-        const values =
-            historyCache[station] || [];
-
         const stats =
-            calculateHistoryStats(values);
+            calculateHistoryStats(
+                historyCache[station]
+                || []
+            );
 
         if (!stats) {
             return;
@@ -332,26 +508,18 @@ function updateHistoryIndicators() {
             monitoringStatus(stats);
 
         if (trendEl) {
-            const sign =
-                stats.delta > 0
-                    ? "+"
-                    : "";
-
             trendEl.textContent =
-                trendSymbol(stats.trend);
+                trendSymbol(
+                    stats.trend
+                );
 
             trendEl.title =
-                `${sign}${stats.delta.toFixed(0)} cm / ${periodLabel()}`;
+                `${signed(stats.delta)} cm / ${periodLabel()}`;
         }
 
         if (statusEl) {
-            const sign =
-                stats.delta > 0
-                    ? "+"
-                    : "";
-
             statusEl.textContent =
-                `${status.label} · ${sign}${stats.delta.toFixed(0)} cm`;
+                `${status.label} · ${signed(stats.delta)} cm`;
 
             statusEl.dataset.level =
                 status.level;
@@ -367,7 +535,10 @@ function updateHistoryIndicators() {
 // WEATHER
 // ============================================================
 
-function updateWeatherCard(station, weather) {
+function updateWeatherCard(
+    station,
+    weather
+) {
     if (!weather) {
         return;
     }
@@ -418,19 +589,302 @@ function updateWeatherCard(station, weather) {
 
 
 // ============================================================
+// REPORTS
+// ============================================================
+
+function updateReports() {
+    stations.forEach(station => {
+        const domId =
+            domIds[station];
+
+        const stats =
+            calculateHistoryStats(
+                historyCache[station]
+                || []
+            );
+
+        const elements = {
+            min:
+                document.getElementById(
+                    `report-min-${domId}`
+                ),
+
+            max:
+                document.getElementById(
+                    `report-max-${domId}`
+                ),
+
+            avg:
+                document.getElementById(
+                    `report-avg-${domId}`
+                ),
+
+            delta:
+                document.getElementById(
+                    `report-delta-${domId}`
+                ),
+
+            count:
+                document.getElementById(
+                    `report-count-${domId}`
+                ),
+
+            status:
+                document.getElementById(
+                    `report-status-${domId}`
+                ),
+
+            trend:
+                document.getElementById(
+                    `report-trend-${domId}`
+                )
+        };
+
+        if (!stats) {
+            Object
+                .values(elements)
+                .forEach(element => {
+                    if (element) {
+                        element.textContent =
+                            "–";
+                    }
+                });
+
+            return;
+        }
+
+        const status =
+            monitoringStatus(stats);
+
+        if (elements.min) {
+            elements.min.textContent =
+                `${stats.min.toFixed(0)} cm`;
+        }
+
+        if (elements.max) {
+            elements.max.textContent =
+                `${stats.max.toFixed(0)} cm`;
+        }
+
+        if (elements.avg) {
+            elements.avg.textContent =
+                `${stats.avg.toFixed(1)} cm`;
+        }
+
+        if (elements.delta) {
+            elements.delta.textContent =
+                `${signed(stats.delta)} cm`;
+        }
+
+        if (elements.count) {
+            elements.count.textContent =
+                String(stats.count);
+        }
+
+        if (elements.status) {
+            elements.status.textContent =
+                status.label;
+
+            elements.status.dataset.level =
+                status.level;
+        }
+
+        if (elements.trend) {
+            elements.trend.textContent =
+                trendSymbol(stats.trend);
+
+            elements.trend.title =
+                `${signed(stats.delta)} cm / ${periodLabel(selectedReportPeriod)}`;
+        }
+    });
+}
+
+
+// ============================================================
+// CSV / JSON EXPORT
+// ============================================================
+
+function createExportPayload() {
+    const reports = {};
+
+    stations.forEach(station => {
+        const values =
+            historyCache[station]
+            || [];
+
+        reports[station] = {
+            station,
+            label:
+                locations[station].label,
+            period:
+                selectedReportPeriod,
+            statistics:
+                calculateHistoryStats(
+                    values
+                ),
+            weather:
+                weatherCache[station]
+                || null,
+            measurements:
+                values
+        };
+    });
+
+    return {
+        generatedAt:
+            new Date().toISOString(),
+
+        application:
+            "PegelConnect Pro",
+
+        period:
+            selectedReportPeriod,
+
+        reports,
+
+        events:
+            eventLog
+    };
+}
+
+
+function downloadTextFile(
+    filename,
+    content,
+    mimeType
+) {
+    const blob =
+        new Blob(
+            [content],
+            {
+                type: mimeType
+            }
+        );
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+    link.href =
+        url;
+
+    link.download =
+        filename;
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(
+        url
+    );
+}
+
+
+function exportJson() {
+    const payload =
+        createExportPayload();
+
+    const filename =
+        `pegelconnect-report-${selectedReportPeriod}-${new Date().toISOString().slice(0, 10)}.json`;
+
+    downloadTextFile(
+        filename,
+        JSON.stringify(
+            payload,
+            null,
+            2
+        ),
+        "application/json;charset=utf-8"
+    );
+
+    addEvent(
+        "REPORT",
+        `JSON-Report ${selectedReportPeriod} exportiert.`,
+        "success"
+    );
+}
+
+
+function exportCsv() {
+    const rows = [
+        [
+            "Station",
+            "Timestamp",
+            "Value_cm"
+        ]
+    ];
+
+    stations.forEach(station => {
+        const values =
+            historyCache[station]
+            || [];
+
+        values.forEach(item => {
+            rows.push([
+                locations[station].label,
+                item.timestamp,
+                Number(item.value)
+                    .toFixed(1)
+            ]);
+        });
+    });
+
+    const csv =
+        rows
+            .map(row =>
+                row
+                    .map(value =>
+                        `"${String(value).replaceAll("\"", "\"\"")}"`
+                    )
+                    .join(";")
+            )
+            .join("\r\n");
+
+    const filename =
+        `pegelconnect-history-${selectedReportPeriod}-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    downloadTextFile(
+        filename,
+        "\uFEFF" + csv,
+        "text/csv;charset=utf-8"
+    );
+
+    addEvent(
+        "REPORT",
+        `CSV-Export ${selectedReportPeriod} erstellt.`,
+        "success"
+    );
+}
+
+
+// ============================================================
 // CHART
 // ============================================================
 
 function drawChart(history) {
     const canvas =
-        document.getElementById("chart");
+        document.getElementById(
+            "chart"
+        );
 
     if (!canvas) {
         return;
     }
 
     const dpr =
-        window.devicePixelRatio || 1;
+        window.devicePixelRatio
+        || 1;
 
     const cssW =
         canvas.clientWidth;
@@ -445,9 +899,14 @@ function drawChart(history) {
         cssH * dpr;
 
     const ctx =
-        canvas.getContext("2d");
+        canvas.getContext(
+            "2d"
+        );
 
-    ctx.scale(dpr, dpr);
+    ctx.scale(
+        dpr,
+        dpr
+    );
 
     ctx.clearRect(
         0,
@@ -464,15 +923,20 @@ function drawChart(history) {
     };
 
     const width =
-        cssW - pad.l - pad.r;
+        cssW
+        - pad.l
+        - pad.r;
 
     const height =
-        cssH - pad.t - pad.b;
+        cssH
+        - pad.t
+        - pad.b;
 
     const all =
         stations.flatMap(
             station =>
-                history?.[station] || []
+                history?.[station]
+                || []
         );
 
     if (!all.length) {
@@ -506,10 +970,14 @@ function drawChart(history) {
     }
 
     let min =
-        Math.min(...numericValues);
+        Math.min(
+            ...numericValues
+        );
 
     let max =
-        Math.max(...numericValues);
+        Math.max(
+            ...numericValues
+        );
 
     if (min === max) {
         min -= 10;
@@ -524,6 +992,11 @@ function drawChart(history) {
 
     min -= margin;
     max += margin;
+
+
+    /*
+     * Raster + Y-Achse
+     */
 
     ctx.strokeStyle =
         "rgba(120,170,210,0.18)";
@@ -541,7 +1014,8 @@ function drawChart(history) {
     ) {
         const y =
             pad.t
-            + height * (i / 4);
+            + height
+            * (i / 4);
 
         ctx.beginPath();
 
@@ -560,8 +1034,12 @@ function drawChart(history) {
         const label =
             (
                 max
-                - (max - min)
-                * (i / 4)
+                - (
+                    max - min
+                )
+                * (
+                    i / 4
+                )
             ).toFixed(0)
             + " cm";
 
@@ -572,9 +1050,15 @@ function drawChart(history) {
         );
     }
 
+
+    /*
+     * Drei Stationslinien
+     */
+
     stations.forEach(station => {
         const values =
-            history?.[station] || [];
+            history?.[station]
+            || [];
 
         if (!values.length) {
             return;
@@ -595,7 +1079,10 @@ function drawChart(history) {
         ctx.beginPath();
 
         values.forEach(
-            (reading, index) => {
+            (
+                reading,
+                index
+            ) => {
                 const x =
                     pad.l
                     + (
@@ -604,22 +1091,27 @@ function drawChart(history) {
                             : width
                             * index
                             / (
-                                values.length - 1
+                                values.length
+                                - 1
                             )
                     );
 
                 const value =
-                    Number(reading.value);
+                    Number(
+                        reading.value
+                    );
 
                 const y =
                     pad.t
                     + height
                     - (
                         (
-                            value - min
+                            value
+                            - min
                         )
                         / (
-                            max - min
+                            max
+                            - min
                         )
                     )
                     * height;
@@ -641,6 +1133,7 @@ function drawChart(history) {
         ctx.stroke();
     });
 
+
     ctx.fillStyle =
         "#6f8da6";
 
@@ -648,7 +1141,7 @@ function drawChart(history) {
         "11px system-ui";
 
     ctx.fillText(
-        `Zeitraum: ${periodLabel()}`,
+        `Zeitraum: ${periodLabel(selectedHistoryPeriod)}`,
         pad.l,
         cssH - 10
     );
@@ -697,6 +1190,12 @@ function initMap() {
         markers[station] =
             marker;
     });
+
+    addEvent(
+        "MAP",
+        "OpenStreetMap initialisiert.",
+        "success"
+    );
 }
 
 
@@ -710,13 +1209,19 @@ function updateMapPopups(state) {
         }
 
         const reading =
-            state?.stations?.[station];
+            state?.stations?.[
+                station
+            ];
 
         const weather =
-            weatherCache[station];
+            weatherCache[
+                station
+            ];
 
         const location =
-            locations[station];
+            locations[
+                station
+            ];
 
         const stats =
             calculateHistoryStats(
@@ -725,7 +1230,9 @@ function updateMapPopups(state) {
             );
 
         const status =
-            monitoringStatus(stats);
+            monitoringStatus(
+                stats
+            );
 
         const waterText =
             reading
@@ -737,37 +1244,44 @@ function updateMapPopups(state) {
                 ? `${Number(weather.temperature).toFixed(1)} °C`
                 : "Keine Wetterdaten";
 
-        let trendText =
-            "Noch keine Historie";
-
-        if (stats) {
-            const sign =
-                stats.delta > 0
-                    ? "+"
-                    : "";
-
-            trendText =
-                `${trendSymbol(stats.trend)} ${sign}${stats.delta.toFixed(0)} cm / ${periodLabel()}`;
-        }
+        const trendText =
+            stats
+                ? `${trendSymbol(stats.trend)} ${signed(stats.delta)} cm / ${periodLabel()}`
+                : "Keine Historie";
 
         marker.setPopupContent(`
-            <strong>${location.label}</strong>
+            <strong>
+                ${location.label}
+            </strong>
+
             <br><br>
 
             Wasserstand:
-            <strong>${waterText}</strong>
+            <strong>
+                ${waterText}
+            </strong>
+
             <br>
 
             Trend:
-            <strong>${trendText}</strong>
+            <strong>
+                ${trendText}
+            </strong>
+
             <br>
 
             Monitoring:
-            <strong>${status.label}</strong>
+            <strong>
+                ${status.label}
+            </strong>
+
             <br>
 
             Temperatur:
-            <strong>${weatherText}</strong>
+            <strong>
+                ${weatherText}
+            </strong>
+
             <br>
 
             ${
@@ -783,7 +1297,7 @@ function updateMapPopups(state) {
 
 
 // ============================================================
-// ALERTS
+// LIVE MELDUNGEN
 // ============================================================
 
 function generateAlerts(state) {
@@ -823,11 +1337,14 @@ function generateAlerts(state) {
 
     stations.forEach(station => {
         const reading =
-            state.stations?.[station];
+            state.stations?.[
+                station
+            ];
 
         const stats =
             calculateHistoryStats(
-                historyCache[station] || []
+                historyCache[station]
+                || []
             );
 
         if (!reading) {
@@ -843,18 +1360,13 @@ function generateAlerts(state) {
         }
 
         if (stats) {
-            const sign =
-                stats.delta > 0
-                    ? "+"
-                    : "";
-
             if (stats.delta >= 5) {
                 alerts.push({
                     type: "warning",
                     title:
                         `${locations[station].label}: Pegel steigt`,
                     message:
-                        `${sign}${stats.delta.toFixed(0)} cm innerhalb von ${periodLabel()}.`
+                        `${signed(stats.delta)} cm innerhalb von ${periodLabel()}.`
                 });
             }
 
@@ -864,13 +1376,15 @@ function generateAlerts(state) {
                     title:
                         `${locations[station].label}: Pegel fällt`,
                     message:
-                        `${stats.delta.toFixed(0)} cm innerhalb von ${periodLabel()}.`
+                        `${signed(stats.delta)} cm innerhalb von ${periodLabel()}.`
                 });
             }
         }
 
         const weather =
-            weatherCache[station];
+            weatherCache[
+                station
+            ];
 
         if (
             weather
@@ -945,7 +1459,9 @@ function generateAlerts(state) {
 
     if (counter) {
         counter.textContent =
-            String(alerts.length);
+            String(
+                alerts.length
+            );
     }
 }
 
@@ -962,11 +1478,14 @@ function filterStations(value) {
         .forEach(card => {
             if (
                 value === "ALL"
-                || card.dataset.station === value
+                || card.dataset.station
+                === value
             ) {
-                card.style.display = "";
+                card.style.display =
+                    "";
             } else {
-                card.style.display = "none";
+                card.style.display =
+                    "none";
             }
         });
 
@@ -1026,7 +1545,8 @@ async function fetchWeather(station) {
 
 
 async function refreshWeather() {
-    let successCount = 0;
+    let successCount =
+        0;
 
     for (
         const station
@@ -1038,8 +1558,9 @@ async function refreshWeather() {
                     station
                 );
 
-            weatherCache[station] =
-                weather;
+            weatherCache[
+                station
+            ] = weather;
 
             updateWeatherCard(
                 station,
@@ -1054,6 +1575,12 @@ async function refreshWeather() {
                 station,
                 error
             );
+
+            addEvent(
+                "WEATHER",
+                `${locations[station].label}: ${error.message}`,
+                "error"
+            );
         }
     }
 
@@ -1064,9 +1591,21 @@ async function refreshWeather() {
 
     if (weatherStatus) {
         weatherStatus.textContent =
-            successCount === stations.length
+            successCount
+            === stations.length
                 ? "CONNECTED"
                 : "DEGRADED";
+    }
+
+    if (
+        successCount
+        === stations.length
+    ) {
+        addEvent(
+            "WEATHER",
+            "Wetterdaten für Köln, Bonn und Mainz aktualisiert.",
+            "success"
+        );
     }
 
     if (latestState) {
@@ -1117,13 +1656,19 @@ async function refreshHistory(
     selectedHistoryPeriod =
         period;
 
-    const newHistory = {};
+    selectedReportPeriod =
+        period;
+
+    const newHistory =
+        {};
 
     try {
         await Promise.all(
             stations.map(
                 async station => {
-                    newHistory[station] =
+                    newHistory[
+                        station
+                    ] =
                         await fetchHistory(
                             station,
                             period
@@ -1141,6 +1686,12 @@ async function refreshHistory(
 
         updateHistoryIndicators();
 
+        updateReports();
+
+        syncPeriodButtons(
+            period
+        );
+
         if (latestState) {
             updateMapPopups(
                 latestState
@@ -1151,10 +1702,30 @@ async function refreshHistory(
             );
         }
 
+        const counts =
+            stations
+                .map(
+                    station =>
+                        `${locations[station].label}: ${historyCache[station]?.length || 0}`
+                )
+                .join(" · ");
+
+        addEvent(
+            "HISTORY",
+            `${periodLabel(period)} geladen · ${counts}`,
+            "success"
+        );
+
     } catch (error) {
         console.error(
             "History Fehler:",
             error
+        );
+
+        addEvent(
+            "HISTORY",
+            error.message,
+            "error"
         );
 
         const errorBox =
@@ -1188,7 +1759,8 @@ async function refreshState() {
             await fetch(
                 "/api/state",
                 {
-                    cache: "no-store"
+                    cache:
+                        "no-store"
                 }
             );
 
@@ -1208,7 +1780,9 @@ async function refreshState() {
             station => {
                 updateStationCard(
                     station,
-                    data.stations?.[station]
+                    data.stations?.[
+                        station
+                    ]
                 );
             }
         );
@@ -1226,6 +1800,11 @@ async function refreshState() {
         const brokerStatus =
             document.getElementById(
                 "brokerStatus"
+            );
+
+        const backendStatus =
+            document.getElementById(
+                "backendStatus"
             );
 
         const systemText =
@@ -1259,6 +1838,11 @@ async function refreshState() {
                     : "OFFLINE";
         }
 
+        if (backendStatus) {
+            backendStatus.textContent =
+                "ONLINE";
+        }
+
         if (systemText) {
             systemText.textContent =
                 data.mqttConnected
@@ -1275,16 +1859,48 @@ async function refreshState() {
             );
         }
 
+
+        /*
+         * MQTT Statuswechsel loggen.
+         */
+
+        if (
+            previousMqttState
+            !== data.mqttConnected
+        ) {
+            addEvent(
+                "MQTT",
+                data.mqttConnected
+                    ? "Mosquitto Broker verbunden."
+                    : "Mosquitto Broker getrennt.",
+                data.mqttConnected
+                    ? "success"
+                    : "error"
+            );
+
+            previousMqttState =
+                data.mqttConnected;
+        }
+
+
         if (data.lastError) {
             if (errorBox) {
-                errorBox.hidden = false;
+                errorBox.hidden =
+                    false;
+
                 errorBox.textContent =
                     data.lastError;
             }
-        } else {
-            if (errorBox) {
-                errorBox.hidden = true;
-            }
+
+            addEvent(
+                "BACKEND",
+                data.lastError,
+                "error"
+            );
+
+        } else if (errorBox) {
+            errorBox.hidden =
+                true;
         }
 
         updateHistoryIndicators();
@@ -1320,11 +1936,90 @@ async function refreshState() {
         }
 
         if (errorBox) {
-            errorBox.hidden = false;
+            errorBox.hidden =
+                false;
 
             errorBox.textContent =
                 `Dashboard-Fehler: ${error.message}`;
         }
+
+        addEvent(
+            "BACKEND",
+            `Backend nicht erreichbar: ${error.message}`,
+            "error"
+        );
+    }
+}
+
+
+// ============================================================
+// ZEITRAUM-BUTTONS
+// ============================================================
+
+function syncPeriodButtons(period) {
+    document
+        .querySelectorAll(
+            ".chart-range, .report-range"
+        )
+        .forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.period
+                === period
+            );
+        });
+}
+
+
+function bindPeriodButtons() {
+    document
+        .querySelectorAll(
+            ".chart-range, .report-range"
+        )
+        .forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    const period =
+                        button.dataset.period
+                        || "24h";
+
+                    refreshHistory(
+                        period
+                    );
+                }
+            );
+        });
+}
+
+
+// ============================================================
+// EXPORT BUTTONS
+// ============================================================
+
+function bindExportButtons() {
+    const csv =
+        document.getElementById(
+            "exportCsv"
+        );
+
+    const json =
+        document.getElementById(
+            "exportJson"
+        );
+
+    if (csv) {
+        csv.addEventListener(
+            "click",
+            exportCsv
+        );
+    }
+
+    if (json) {
+        json.addEventListener(
+            "click",
+            exportJson
+        );
     }
 }
 
@@ -1336,7 +2031,17 @@ async function refreshState() {
 document.addEventListener(
     "DOMContentLoaded",
     () => {
+        addEvent(
+            "SYSTEM",
+            "PegelConnect Pro Dashboard gestartet.",
+            "success"
+        );
+
         initMap();
+
+        bindPeriodButtons();
+
+        bindExportButtons();
 
         const stationSelect =
             document.getElementById(
@@ -1353,67 +2058,10 @@ document.addEventListener(
             );
         }
 
-        document
-            .querySelectorAll(
-                ".chart-range"
-            )
-            .forEach(button => {
-                button.addEventListener(
-                    "click",
-                    () => {
-                        document
-                            .querySelectorAll(
-                                ".chart-range"
-                            )
-                            .forEach(
-                                item =>
-                                    item.classList.remove(
-                                        "active"
-                                    )
-                            );
 
-                        button.classList.add(
-                            "active"
-                        );
-
-                        const text =
-                            button
-                                .textContent
-                                .trim()
-                                .toUpperCase();
-
-                        let period =
-                            "24h";
-
-                        if (
-                            text === "7T"
-                            || text === "7D"
-                        ) {
-                            period =
-                                "7d";
-                        }
-
-                        if (
-                            text === "30T"
-                            || text === "30D"
-                        ) {
-                            period =
-                                "30d";
-                        }
-
-                        if (
-                            button.dataset.period
-                        ) {
-                            period =
-                                button.dataset.period;
-                        }
-
-                        refreshHistory(
-                            period
-                        );
-                    }
-                );
-            });
+        /*
+         * Initiale Daten.
+         */
 
         refreshState();
 
@@ -1423,15 +2071,33 @@ document.addEventListener(
             "24h"
         );
 
+
+        /*
+         * Live Status:
+         * alle 5 Sekunden.
+         */
+
         setInterval(
             refreshState,
             5000
         );
 
+
+        /*
+         * Wetter:
+         * alle 5 Minuten.
+         */
+
         setInterval(
             refreshWeather,
             300000
         );
+
+
+        /*
+         * Historie:
+         * alle 5 Minuten.
+         */
 
         setInterval(
             () =>
