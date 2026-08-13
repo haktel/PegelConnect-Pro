@@ -1801,3 +1801,201 @@ canvas {
         animation: none;
     }
 }
+
+/* ============================================================
+   PEGELCONNECT PRO - REAL DYNAMIC GAUGE
+   Stand: August 2026
+   The needle angle is controlled by --gauge-angle from app.js.
+   Range: 0..600 cm -> -90deg..+90deg
+   ============================================================ */
+
+.station-main-value {
+    margin-top: 22px;
+}
+
+.value strong {
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 22px rgba(51, 216, 255, 0.22);
+}
+
+.water {
+    position: relative;
+    width: min(100%, 310px);
+    height: 160px;
+    margin: 18px auto 24px;
+    overflow: hidden;
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 50% 88%, rgba(51, 216, 255, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
+    border: 1px solid rgba(255,255,255,0.055);
+    box-shadow:
+        inset 0 0 36px rgba(0,0,0,0.20),
+        0 12px 34px rgba(0,0,0,0.18);
+}
+
+.water::before {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+        conic-gradient(
+            from 270deg,
+            #33d8ff 0deg 45deg,
+            #43e6aa 45deg 90deg,
+            #ffd166 90deg 135deg,
+            #ff647c 135deg 180deg,
+            transparent 180deg 360deg
+        );
+    -webkit-mask:
+        radial-gradient(
+            farthest-side,
+            transparent calc(100% - 22px),
+            #000 calc(100% - 21px)
+        );
+    mask:
+        radial-gradient(
+            farthest-side,
+            transparent calc(100% - 22px),
+            #000 calc(100% - 21px)
+        );
+    filter: drop-shadow(0 0 8px rgba(51,216,255,0.15));
+    pointer-events: none;
+}
+
+.water::after {
+    content: "0          300          600 cm";
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    z-index: 4;
+    width: 270px;
+    color: rgba(237,248,255,0.48);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-align: center;
+    white-space: pre;
+    pointer-events: none;
+}
+
+.water-fill {
+    position: absolute;
+    left: 50%;
+    bottom: 19px;
+    width: 4px !important;
+    height: 112px;
+    border-radius: 999px;
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #63efff 22%,
+            #33d8ff 64%,
+            #1e7da0 100%
+        );
+    box-shadow:
+        0 0 7px rgba(255,255,255,0.72),
+        0 0 18px rgba(51,216,255,0.72);
+    transform:
+        translateX(-50%)
+        rotate(var(--gauge-angle, -90deg));
+    transform-origin: 50% 100%;
+    transition:
+        transform 900ms cubic-bezier(.2,.8,.2,1);
+    z-index: 3;
+}
+
+.water-fill::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    width: 20px;
+    height: 20px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(
+            circle at 35% 35%,
+            #ffffff,
+            #63efff 36%,
+            #1686ad 70%,
+            #06283a 100%
+        );
+    border: 3px solid rgba(255,255,255,0.72);
+    box-shadow:
+        0 0 14px rgba(51,216,255,0.76),
+        0 0 32px rgba(51,216,255,0.28);
+}
+
+.water-fill::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    width: 8px;
+    height: 8px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 8px rgba(255,255,255,0.70);
+    z-index: 2;
+}
+
+.station-status {
+    padding: 5px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(67,230,170,0.18);
+    background: rgba(67,230,170,0.07);
+    color: var(--green);
+    font-weight: 800;
+}
+
+@media (max-width: 700px) {
+    .water {
+        width: min(100%, 290px);
+        height: 150px;
+    }
+
+    .water::before {
+        width: 260px;
+        height: 260px;
+    }
+
+    .water::after {
+        width: 250px;
+    }
+
+    .water-fill {
+        height: 103px;
+    }
+}
+
+@media (max-width: 480px) {
+    .water {
+        width: min(100%, 260px);
+        height: 140px;
+    }
+
+    .water::before {
+        width: 240px;
+        height: 240px;
+    }
+
+    .water::after {
+        width: 230px;
+        font-size: 7px;
+    }
+
+    .water-fill {
+        height: 94px;
+    }
+}
+

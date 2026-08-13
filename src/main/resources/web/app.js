@@ -1,4 +1,4 @@
-const stations = ["KÖLN", "BONN", "MAINZ"];
+﻿const stations = ["KÖLN", "BONN", "MAINZ"];
 
 const domIds = {
     "KÖLN": "KOELN",
@@ -420,17 +420,30 @@ function updateStationCard(
     }
 
     if (waterEl) {
-        const percent =
+        const maxGaugeValue =
+            600;
+
+        const clampedValue =
             Math.max(
-                4,
+                0,
                 Math.min(
-                    100,
-                    currentValue / 6
+                    maxGaugeValue,
+                    currentValue
                 )
             );
 
-        waterEl.style.width =
-            `${percent}%`;
+        const angle =
+            -90
+            + (
+                clampedValue
+                / maxGaugeValue
+            )
+            * 180;
+
+        waterEl.style.setProperty(
+            "--gauge-angle",
+            `${angle}deg`
+        );
     }
 
     if (trendEl) {
